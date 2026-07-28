@@ -216,9 +216,34 @@ npm run check:chatbot   # chatbot regression suite
 
 ## Deploying
 
-Any static host. On Vercel or Netlify, set `VITE_SUPABASE_URL` and
-`VITE_SUPABASE_ANON_KEY` in the project's environment variables, and add an SPA
-rewrite so deep links resolve:
+### GitHub Pages (configured)
+
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds and
+publishes on every push to `main`. Enable it once, under **Settings → Pages →
+Source → GitHub Actions**. The site then lives at
+`https://<user>.github.io/mba-university/`.
+
+Two pieces make a client-side router survive a static host:
+
+- `base` in [`vite.config.ts`](vite.config.ts) prefixes built asset URLs with
+  `/mba-university/`, and `BrowserRouter basename={import.meta.env.BASE_URL}`
+  keeps the routes in step — so the same source builds for a sub-path or a
+  domain root with no route changes.
+- [`scripts/spa-fallback.mjs`](scripts/spa-fallback.mjs) copies `index.html` to
+  `404.html` after each build. Pages serves that for any path not on disk, which
+  is every deep link here, so `/programs/finance` resolves instead of 404ing.
+
+Supabase credentials are optional in CI — without them the deployed site runs on
+bundled seed content and the admin panel is read-only. To connect it, add
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` under **Settings → Secrets and
+variables → Actions**, then re-run the workflow (a secret change alone does not
+trigger a build).
+
+### Anywhere else
+
+Any static host works. Build with `BASE_PATH=/ npm run build` when the site is
+served from a domain root, set the two Supabase variables in the host's
+environment, and add an SPA rewrite:
 
 ```
 /*    /index.html   200
