@@ -68,7 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = useCallback(async (email: string) => {
     if (!supabase) return { ok: false, error: 'Supabase is not configured.' }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin`,
+      // BASE_URL, not a bare '/admin' — on GitHub Pages the app is served from
+      // /mba-university/, so origin alone would send the reset link to a path
+      // that does not exist. BASE_URL already carries its trailing slash.
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}admin`,
     })
     if (error) return { ok: false, error: error.message }
     return { ok: true }
