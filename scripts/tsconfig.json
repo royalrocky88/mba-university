@@ -1,0 +1,17 @@
+{
+  "//": "Standalone config for the node scripts in this folder. tsx reads it to resolve the `@/` alias.",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./**/*.ts"]
+}

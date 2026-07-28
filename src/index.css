@@ -1,0 +1,194 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Everything visual in the site pulls from here — change a value
+   below and it propagates to every page, because no component hardcodes a hex.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Brand — deep academic navy, ceremonial gold, warm ivory */
+  --color-ink-950: #050a18;
+  --color-ink-900: #070d20;
+  --color-ink-800: #0c1530;
+  --color-ink-700: #142046;
+  --color-ink-600: #1e2f63;
+  --color-ink-500: #2c4288;
+  --color-ink-400: #4a63b0;
+  --color-ink-300: #7d92cf;
+  --color-ink-200: #b3c1e6;
+  --color-ink-100: #dbe3f5;
+  --color-ink-50: #eef2fb;
+
+  --color-gold-600: #a37d12;
+  --color-gold-500: #c9a227;
+  --color-gold-400: #e0bb4a;
+  --color-gold-300: #efd282;
+  --color-gold-200: #f7e7b8;
+  --color-gold-100: #fdf6e3;
+
+  --color-ivory: #fbf9f4;
+  --color-ivory-dim: #f2eee4;
+
+  /* Type */
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgb(5 10 24 / 0.04), 0 8px 24px -8px rgb(5 10 24 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(5 10 24 / 0.06), 0 24px 48px -12px rgb(5 10 24 / 0.24);
+  --shadow-gold: 0 8px 32px -8px rgb(201 162 39 / 0.45);
+}
+
+/* --------------------------------------------------------------------------- */
+
+@layer base {
+  * {
+    border-color: --alpha(var(--color-ink-900) / 10%);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ivory);
+    color: --alpha(var(--color-ink-900) / 78%);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink-900);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible, brand-coloured focus ring on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-gold-300);
+    color: var(--color-ink-900);
+  }
+
+  /* Honour the OS "reduce motion" setting globally. The 3D hero also checks this
+     in JS (see usePrefersReducedMotion) so it never even mounts a WebGL context. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Page gutter — one source of truth for horizontal rhythm across all pages. */
+  .shell {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 80rem;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .shell {
+      padding-inline: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .shell {
+      padding-inline: 3rem;
+    }
+  }
+
+  /* Frosted surface used by the navbar, dropdowns and stat tiles. */
+  .glass {
+    background: --alpha(var(--color-ivory) / 72%);
+    backdrop-filter: blur(16px) saturate(1.6);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  }
+
+  .glass-dark {
+    background: --alpha(var(--color-ink-900) / 55%);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  /* Gold gradient text for headline accents. */
+  .text-gradient-gold {
+    background: linear-gradient(
+      100deg,
+      var(--color-gold-300) 0%,
+      var(--color-gold-500) 45%,
+      var(--color-gold-200) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Marquee used by the recruiter strip on /placements. */
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
