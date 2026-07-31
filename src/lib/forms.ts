@@ -1,10 +1,18 @@
+import { isSupabaseConfigured } from '@/lib/supabase'
+import { insertSubmission, type SubmissionKind } from '@/lib/repository/submissions'
+
 /**
  * Form submission boundary.
  *
- * There is no backend in this build, so both handlers below simulate a network
- * round-trip and log the payload. To go live, replace the body of each function
- * with a `fetch` to your endpoint (or a Formspree / Google Forms URL) — nothing
- * in the components needs to change, because they only await these promises.
+ * Both handlers write a row to the `submissions` table, which the admin panel
+ * reads at /admin/submissions. The components only await these promises, so
+ * nothing in the UI knows or cares where a submission ends up.
+ *
+ * Without credentials (`isSupabaseConfigured === false`) the handlers fall back
+ * to simulating the round-trip, exactly as they did before there was a table.
+ * That is what keeps the public demo deploy usable: the form validates, succeeds
+ * and shows a reference, it just has nowhere to file the result. The admin inbox
+ * says as much rather than showing an empty list and implying nobody applied.
  */
 
 export type ApplicationPayload = {
@@ -28,28 +36,68 @@ export type ContactPayload = {
 
 export type SubmitResult = { ok: true; reference: string } | { ok: false; error: string }
 
-/** Human-readable reference so the success screen has something to show. */
+/**
+ * Human-readable reference the applicant can quote back to us, e.g. `MSB-K3P9QX-7YT`.
+ *
+ * The timestamp keeps references roughly sortable; the random tail keeps two
+ * people submitting in the same millisecond from colliding. `reference` is unique
+ * in Postgres, so a collision is caught rather than silently overwriting — see
+ * the retry in `submit`. The shape must satisfy the `submissions_reference_format`
+ * constraint in `supabase/schema.sql`.
+ */
 function makeReference(prefix: string): string {
   const stamp = Date.now().toString(36).toUpperCase().slice(-6)
-  return `${prefix}-${stamp}`
+  const noise = Math.random().toString(36).toUpperCase().slice(2, 5).padEnd(3, 'X')
+  return `${prefix}-${stamp}-${noise}`
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function submitApplication(payload: ApplicationPayload): Promise<SubmitResult> {
-  await delay(1200)
-  // TODO: replace with `await fetch('/api/applications', { method: 'POST', ... })`
-  console.info('[application submitted]', payload)
-  return { ok: true, reference: makeReference('MSB') }
+/** How many fresh references to try before giving up on a unique violation. */
+const MAX_REFERENCE_ATTEMPTS = 3
+
+async function submit(
+  kind: SubmissionKind,
+  prefix: string,
+  payload: Record<string, unknown>,
+): Promise<SubmitResult> {
+  if (!isSupabaseConfigured) {
+    await delay(900)
+    console.info(`[${kind} submitted — no database configured, nothing was stored]`, payload)
+    return { ok: true, reference: makeReference(prefix) }
+  }
+
+  let lastMessage = 'Something went wrong on our side.'
+
+  for (let attempt = 1; attempt <= MAX_REFERENCE_ATTEMPTS; attempt++) {
+    const reference = makeReference(prefix)
+    const result = await insertSubmission(kind, reference, payload)
+
+    if (result.ok) return { ok: true, reference }
+
+    lastMessage = result.message
+    // Only a reference collision is worth another go; anything else (offline,
+    // policy rejection, malformed payload) will fail again identically.
+    if (!result.duplicateReference) break
+  }
+
+  console.error(`[${kind} submission failed]`, lastMessage)
+  return {
+    ok: false,
+    error: `We could not record your ${
+      kind === 'application' ? 'application' : 'message'
+    }. Please try again, or email us directly if this keeps happening.`,
+  }
 }
 
-export async function submitContact(payload: ContactPayload): Promise<SubmitResult> {
-  await delay(900)
-  // TODO: replace with `await fetch('/api/contact', { method: 'POST', ... })`
-  console.info('[contact submitted]', payload)
-  return { ok: true, reference: makeReference('MSG') }
+export function submitApplication(payload: ApplicationPayload): Promise<SubmitResult> {
+  return submit('application', 'MSB', { ...payload })
+}
+
+export function submitContact(payload: ContactPayload): Promise<SubmitResult> {
+  return submit('contact', 'MSG', { ...payload })
 }
 
 /** Shared validation rules so both forms reject the same bad input. */

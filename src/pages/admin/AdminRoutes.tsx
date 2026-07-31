@@ -7,6 +7,7 @@ import { AdminSettings } from './SettingsPage'
 import { CollectionList } from './CollectionList'
 import { CollectionEditor } from './CollectionEditor'
 import { MediaLibrary } from './MediaLibrary'
+import { AdminSubmissions } from './Submissions'
 
 /**
  * Admin routing and the authentication gate.
@@ -41,6 +42,8 @@ export default function AdminRoutes() {
         <Route index element={<AdminDashboard />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="media" element={<MediaLibrary />} />
+        {/* Static segment, so it out-ranks the `:collection` pattern below. */}
+        <Route path="submissions" element={<AdminSubmissions />} />
         <Route path=":collection" element={<CollectionList />} />
         <Route path=":collection/:id" element={<CollectionEditor />} />
         <Route path="*" element={<AdminDashboard />} />

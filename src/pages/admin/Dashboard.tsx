@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collectionKeys, labelFor, seedDatabase } from '@/lib/repository'
 import { useContent } from '@/context/ContentProvider'
+import { useNewSubmissionCount } from '@/hooks/useSubmissions'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -9,6 +10,7 @@ import { formatDateShort } from '@/lib/utils'
 
 export function AdminDashboard() {
   const { content, live, refresh } = useContent()
+  const newSubmissions = useNewSubmissionCount()
   const [seeding, setSeeding] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -77,6 +79,30 @@ export function AdminDashboard() {
         </div>
       )}
 
+      {newSubmissions > 0 && (
+        <Link
+          to="/admin/submissions"
+          className="group mb-6 flex items-center gap-4 rounded-2xl border border-gold-500/40 bg-gold-500/8 px-5 py-4 transition-colors hover:border-gold-500/70"
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-500 text-ink-950">
+            <Icon name="mail" size={19} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="font-display text-[1.02rem] text-ink-900">
+              {newSubmissions} new {newSubmissions === 1 ? 'submission' : 'submissions'}
+            </div>
+            <p className="mt-0.5 text-[0.86rem] text-ink-900/60">
+              Applications and enquiries waiting to be read.
+            </p>
+          </div>
+          <Icon
+            name="arrow-right"
+            size={17}
+            className="shrink-0 text-gold-700 transition-transform group-hover:translate-x-1"
+          />
+        </Link>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {collectionKeys.map((key) => (
           <Link
@@ -106,7 +132,10 @@ export function AdminDashboard() {
         <div className="rounded-2xl border border-ink-900/10 bg-white/70 p-6">
           <h2 className="font-display text-lg text-ink-900">Quick actions</h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button to="/admin/news/new" size="sm" variant="primary" icon="arrow-right">
+            <Button to="/admin/submissions" size="sm" variant="primary" icon="arrow-right">
+              View enquiries
+            </Button>
+            <Button to="/admin/news/new" size="sm" variant="outline">
               Post an update
             </Button>
             <Button to="/admin/programs/new" size="sm" variant="outline">

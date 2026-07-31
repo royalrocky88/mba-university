@@ -83,6 +83,26 @@ create table if not exists public.leadership (
   data jsonb not null
 );
 
+-- Form submissions: MBA applications and contact enquiries.
+--
+-- Deliberately NOT one of the content tables above. Those are world-readable and
+-- admin-writable; this one is the exact inverse — anybody may write to it, only a
+-- signed-in administrator may read it. See the policy block below.
+create table if not exists public.submissions (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('application', 'contact')),
+  reference text not null unique,
+  status text not null default 'new' check (status in ('new', 'read', 'archived')),
+  created_at timestamptz not null default now(),
+  data jsonb not null,
+  -- Guards against a bot filling the table with junk. All three are cheap and
+  -- immutable, so they are valid in a check constraint.
+  constraint submissions_reference_format check (reference ~ '^[A-Z]{3}-[A-Z0-9-]{4,20}$'),
+  constraint submissions_data_is_object check (jsonb_typeof(data) = 'object'),
+  constraint submissions_data_has_email check (data ? 'email'),
+  constraint submissions_data_size check (length(data::text) <= 8192)
+);
+
 -- Single-row settings table.
 create table if not exists public.site_settings (
   id integer primary key default 1,
@@ -112,12 +132,20 @@ create unique index if not exists programs_slug_key on public.programs ((data ->
 create unique index if not exists faculty_slug_key on public.faculty ((data ->> 'slug'));
 create unique index if not exists news_slug_key on public.news ((data ->> 'slug'));
 
+-- The inbox is always read newest-first, and filtered by status.
+create index if not exists submissions_created_idx on public.submissions (created_at desc);
+create index if not exists submissions_status_idx on public.submissions (status);
+
 -- -----------------------------------------------------------------------------
 -- Row-level security
 --
 -- Anyone may read (this is a public website). Only an authenticated user may
 -- write. This is the real security boundary — the React route guard is only a
 -- convenience for the browser.
+--
+-- `submissions` is deliberately absent from the loop below and gets its own
+-- policies further down, because a public read policy on it would leak the
+-- contact details of every applicant.
 -- -----------------------------------------------------------------------------
 
 do $$
@@ -144,6 +172,43 @@ begin
     );
   end loop;
 end $$;
+
+-- -----------------------------------------------------------------------------
+-- Row-level security — submissions
+--
+-- Write-only for the public, read-only for the administrator:
+--   • a visitor with the anon key may INSERT a new submission and nothing else,
+--   • only a signed-in administrator may SELECT, UPDATE or DELETE.
+--
+-- Because anon has no select policy, the insert in `src/lib/forms.ts` must not
+-- chain `.select()` — asking for the row back would be rejected.
+-- -----------------------------------------------------------------------------
+
+alter table public.submissions enable row level security;
+
+drop policy if exists "public insert submissions" on public.submissions;
+create policy "public insert submissions"
+  on public.submissions for insert
+  to anon, authenticated
+  with check (status = 'new');
+
+drop policy if exists "authenticated read submissions" on public.submissions;
+create policy "authenticated read submissions"
+  on public.submissions for select
+  to authenticated
+  using (true);
+
+drop policy if exists "authenticated update submissions" on public.submissions;
+create policy "authenticated update submissions"
+  on public.submissions for update
+  to authenticated
+  using (true) with check (true);
+
+drop policy if exists "authenticated delete submissions" on public.submissions;
+create policy "authenticated delete submissions"
+  on public.submissions for delete
+  to authenticated
+  using (true);
 
 -- -----------------------------------------------------------------------------
 -- Storage bucket for admin-uploaded images
@@ -184,4 +249,7 @@ create policy "authenticated delete media"
 --      (Turn OFF "Enable sign-ups" under Authentication → Providers → Email, so
 --      nobody can register themselves.)
 --   2. Sign in at /admin and press "Seed database" to load the starting content.
+--   3. Form submissions arrive at /admin/submissions. Nothing notifies you of a
+--      new one — add a Database Webhook on insert into public.submissions if you
+--      want email or Slack alerts.
 -- =============================================================================

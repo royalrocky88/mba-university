@@ -57,9 +57,10 @@ Without this the site works but nothing can be saved.
 is sufficient.
 
 **2. Run the schema.** Dashboard → SQL Editor → New query → paste all of
-[`supabase/schema.sql`](supabase/schema.sql) → Run. This creates the eleven
+[`supabase/schema.sql`](supabase/schema.sql) → Run. This creates the twelve
 tables, their indexes, row-level security policies, and the public `media`
-storage bucket. It is idempotent — running it twice is harmless.
+storage bucket. It is idempotent — running it twice is harmless, so an existing
+install should re-run it to pick up the `submissions` table.
 
 **3. Add your credentials.** Dashboard → Settings → API, then:
 
@@ -76,7 +77,8 @@ Restart the dev server — Vite only reads env files at startup.
 
 > The anon key is safe in a browser bundle. Row-level security in `schema.sql`
 > is what actually gates writes: anyone may read, only an authenticated user may
-> write.
+> write. `submissions` is the one exception and runs the other way round —
+> anyone may insert a form response, only an authenticated user may read one.
 
 **4. Create your administrator.** Dashboard → Authentication → Users → **Add
 user**. Set an email and password.
@@ -96,7 +98,10 @@ is currently empty, and never overwrites existing rows.
 
 Sign in at [`/admin`](http://localhost:5173/admin).
 
-- **Dashboard** — item counts per collection, quick actions, database seeding.
+- **Dashboard** — item counts per collection, quick actions, database seeding,
+  and a banner when submissions are waiting.
+- **Enquiries & applications** — everything sent through the two public forms.
+  See below.
 - **Ten content collections** — programmes, faculty, news, testimonials,
   recruiters, placement trend, facilities, gallery, FAQs, leadership. Each has
   create, edit, delete, search, and move-up/move-down ordering that controls the
@@ -110,6 +115,44 @@ Sign in at [`/admin`](http://localhost:5173/admin).
 
 Delete is always two-step. Slugs are validated for format and uniqueness before
 saving, because a duplicate would make one of the two pages unreachable.
+
+### Enquiries and applications
+
+The application form on `/admissions` and the contact form on `/contact` both
+write to a `submissions` table, readable at
+[`/admin/submissions`](http://localhost:5173/admin/submissions).
+
+The inbox filters by status (new / read / archived) and type, searches across
+every field, and exports the current filtered view to CSV. Opening a submission
+marks it read, the way a mail client would. There is no editor: a submission is
+a record of what somebody actually typed, so it can be triaged and deleted but
+not rewritten.
+
+Two things about this table differ from the content collections, both
+deliberate:
+
+- **The security policy is inverted.** Content is world-readable and
+  admin-writable; a submission is the reverse — `anon` may `INSERT` and nothing
+  else, and only an authenticated administrator may `SELECT`, `UPDATE` or
+  `DELETE`. A public read policy here would expose the contact details of every
+  applicant. It is also why the insert in
+  [`src/lib/forms.ts`](src/lib/forms.ts) does not chain `.select()`: asking for
+  the row back would be rejected by the very policy that protects it.
+- **It is not part of the content snapshot.** `ContentProvider` loads on every
+  visitor's first paint, and applicant data has no business being in that
+  payload. The inbox loads separately, from inside the admin session, via
+  [`src/hooks/useSubmissions.ts`](src/hooks/useSubmissions.ts).
+
+Because `anon` can insert, the table is a spam target. `schema.sql` applies
+cheap structural guards — reference format, payload must be a JSON object, must
+carry an `email` key, 8 KB ceiling — which stop junk rows but are not rate
+limiting. For a site taking real traffic, add Supabase's abuse protection or put
+a CAPTCHA in front of the forms.
+
+Without Supabase configured both forms keep their previous behaviour: they
+validate, simulate the round-trip and log the payload to the console, so the
+demo deploy still works end to end. The inbox says so explicitly rather than
+showing an empty list and implying nobody has applied.
 
 ### Adding a field to a collection
 
@@ -258,10 +301,15 @@ environment, and add an SPA rewrite:
   `BrowserRouter` and does not use RSC mode, so it is not exploitable here. The
   suggested `npm audit fix --force` downgrades to 7.11.0 — take it if your audit
   policy requires a clean report.
-- **Forms are not wired to a backend.** `submitApplication` and `submitContact`
-  in [`src/lib/forms.ts`](src/lib/forms.ts) validate fully, simulate a
-  round-trip and log the payload. Replace each function body with a `fetch` to
-  your endpoint; no component needs to change.
+- **Forms need a database to be useful.** `submitApplication` and
+  `submitContact` in [`src/lib/forms.ts`](src/lib/forms.ts) write to the
+  `submissions` table and show up at `/admin/submissions`. Without credentials
+  they fall back to simulating the round-trip and logging the payload — which is
+  what the public demo deploy does, so the form succeeds but nothing is stored.
+- **Nobody is notified of a new submission.** They accumulate in the inbox until
+  someone opens it. Email or Slack alerts would need a Supabase Database Webhook
+  or an Edge Function firing on insert; there is no server in this build to send
+  from.
 - **Gallery tiles are CSS gradients**, not photographs. Upload real images in
   the media library and swap the `<span>` for an `<img>` in
   [`src/pages/Campus.tsx`](src/pages/Campus.tsx) — the aspect ratio is already

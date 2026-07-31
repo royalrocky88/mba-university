@@ -4,12 +4,14 @@ import { cn } from '@/lib/utils'
 import { collectionKeys, labelFor } from '@/lib/repository'
 import { useAuth } from '@/context/AuthProvider'
 import { useContent } from '@/context/ContentProvider'
+import { useNewSubmissionCount } from '@/hooks/useSubmissions'
 import { Icon, type IconName } from '@/components/ui/Icon'
 
 /** Sidebar chrome for every admin screen. Deliberately plain — this is a tool. */
 export function AdminLayout() {
   const { user, signOut } = useAuth()
   const { content, live, refresh, loading } = useContent()
+  const newSubmissions = useNewSubmissionCount()
   const navigate = useNavigate()
   const [navOpen, setNavOpen] = useState(false)
 
@@ -52,6 +54,12 @@ export function AdminLayout() {
 
         <nav className="flex-1 p-3" aria-label="Admin sections">
           <AdminNavLink to="/admin" end icon="chart" label="Dashboard" />
+          <AdminNavLink
+            to="/admin/submissions"
+            icon="mail"
+            label="Enquiries"
+            badge={newSubmissions}
+          />
           <AdminNavLink to="/admin/settings" icon="cpu" label="Site settings" />
           <AdminNavLink to="/admin/media" icon="download" label="Media library" />
 
@@ -151,12 +159,16 @@ function AdminNavLink({
   icon,
   label,
   count,
+  badge,
   end,
 }: {
   to: string
   icon: IconName
   label: string
+  /** Muted total, for collections. */
   count?: number
+  /** Highlighted attention count — rendered only when non-zero. */
+  badge?: number
   end?: boolean
 }) {
   return (
@@ -170,9 +182,27 @@ function AdminNavLink({
         )
       }
     >
-      <Icon name={icon} size={16} className="shrink-0" />
-      <span className="flex-1 truncate">{label}</span>
-      {count !== undefined && <span className="shrink-0 text-[0.72rem] opacity-60">{count}</span>}
+      {({ isActive }) => (
+        <>
+          <Icon name={icon} size={16} className="shrink-0" />
+          <span className="flex-1 truncate">{label}</span>
+          {badge !== undefined && badge > 0 && (
+            <span
+              aria-label={`${badge} new`}
+              className={cn(
+                'shrink-0 rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums',
+                // The active row is already gold, so the badge inverts to stay legible.
+                isActive ? 'bg-ink-950 text-gold-300' : 'bg-gold-500 text-ink-950',
+              )}
+            >
+              {badge}
+            </span>
+          )}
+          {count !== undefined && (
+            <span className="shrink-0 text-[0.72rem] opacity-60">{count}</span>
+          )}
+        </>
+      )}
     </NavLink>
   )
 }

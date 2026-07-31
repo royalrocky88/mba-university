@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Credentials. `.env.local` is already covered by *.local above, but a plain
+# `.env` is not — and that is the file people create by mistake. Never commit
+# Supabase keys or admin logins; they belong in .env.local locally and in
+# GitHub Actions secrets for CI.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
