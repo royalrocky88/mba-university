@@ -253,7 +253,25 @@ npm run preview         # serve the production build
 npm run typecheck       # types only
 npm run lint            # oxlint
 npm run check:chatbot   # chatbot regression suite
+npm run check:rls       # row-level security regression suite (needs credentials)
+npm run seed            # copy bundled content into an empty database
 ```
+
+`check:rls` and `seed` talk to the live Supabase project, so they need an
+administrator session. Credentials come from the environment, never from a file:
+
+```bash
+SUPABASE_ADMIN_EMAIL=you@example.com \
+SUPABASE_ADMIN_PASSWORD='…' \
+npm run check:rls
+```
+
+`check:rls` is worth running after any edit to `supabase/schema.sql`. It proves
+against the real database that anonymous visitors can read published content but
+not modify it, and can submit a form but not read anybody else's — the failure
+mode it guards against is silent, because a policy that is too permissive looks
+exactly like one that is correct. Every row it creates is deleted before it
+exits.
 
 ---
 

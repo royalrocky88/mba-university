@@ -10,7 +10,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "check:chatbot": "tsx --tsconfig scripts/tsconfig.json scripts/chatbot-check.ts"
+    "check:chatbot": "tsx --tsconfig scripts/tsconfig.json scripts/chatbot-check.ts",
+    "seed": "tsx --tsconfig scripts/tsconfig.json scripts/seed-database.ts",
+    "check:rls": "tsx --tsconfig scripts/tsconfig.json scripts/rls-check.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
