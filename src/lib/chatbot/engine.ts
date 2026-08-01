@@ -45,6 +45,66 @@ type Intent = {
 const listOf = (items: string[]) => items.map((item) => `• ${item}`).join('\n')
 
 // ---------------------------------------------------------------------------
+// Scope guard
+//
+// Intents match on substrings, which makes them cheap and predictable but also
+// blind to context: "is there a dress code" and "is there a dress code at
+// Google" trigger the same rule, and answering the second one with our dress
+// code is worse than saying nothing. The lists below run before intent matching
+// and catch the case where a question borrows our vocabulary to ask about
+// somewhere else.
+//
+// This is a blunt instrument by design. A false decline costs the visitor one
+// rephrase; a false answer puts a confident, wrong statement about another
+// organisation in our name.
+// ---------------------------------------------------------------------------
+
+/** Named organisations we can never speak for. */
+const FOREIGN_ORGANISATIONS = [
+  'google', 'microsoft', 'amazon', 'netflix', 'facebook', 'instagram', 'linkedin',
+  'infosys', 'tcs$', 'wipro', 'cognizant', 'capgemini',
+  'harvard', 'stanford', 'wharton', 'insead', 'oxford', 'cambridge',
+  'iim$', 'iims$', 'iit$', 'iits$', 'nit$', 'bits$', 'symbiosis', 'amity', 'ignou',
+  'american universit', 'foreign universit', 'other universit', 'other college',
+]
+
+/** Subject matter that shares our vocabulary but none of our scope. */
+const FOREIGN_TOPICS = [
+  'bitcoin', 'crypto', 'nifty', 'sensex', 'stock market', 'share market', 'mutual fund',
+  'passport', 'visa applic', 'driving licen', 'aadhaar', 'pan card', 'income tax',
+  'volvo', 'poem', 'joke', 'prime minister', 'president of', 'world cup', 'cricket',
+  'weather', 'recipe', 'python script', 'javascript', 'harry potter',
+]
+
+/** Places that are not where we are. Only disqualifying with no anchor to us. */
+const ELSEWHERE = [
+  'mumbai', 'bangalore', 'bengaluru', 'chennai', 'kolkata', 'pune', 'hyderabad',
+  'ahmedabad', 'jaipur', 'lucknow', 'chandigarh', 'kerala', 'london', 'new york',
+  'dubai', 'singapore',
+]
+
+/** Words that tie a question back to this school. */
+const SELF_ANCHORS = [
+  'meridian', 'campus', 'college', 'school', 'universit', 'hostel', 'mba',
+  'admission', 'placement', 'faculty', 'programme', 'program', 'course', 'class',
+  'student', 'here$', 'your', 'you$', 'apka', 'aapka', 'apke', 'aapke', 'hamare', 'hamari',
+]
+
+/**
+ * True when the question is anchored somewhere other than this school.
+ *
+ * A place name only disqualifies a question when nothing else ties it back to
+ * us — "how do I reach the campus from Delhi" is ours, "how do I reach Mumbai
+ * from Delhi" is not.
+ */
+function asksAboutSomewhereElse(query: string): boolean {
+  if (hasAny(query, FOREIGN_ORGANISATIONS)) return true
+  if (hasAny(query, FOREIGN_TOPICS)) return true
+  if (hasAny(query, ELSEWHERE) && !hasAny(query, SELF_ANCHORS)) return true
+  return false
+}
+
+// ---------------------------------------------------------------------------
 // Intents
 // ---------------------------------------------------------------------------
 
@@ -89,6 +149,9 @@ const intents: Intent[] = [
     id: 'capabilities',
     priority: 88,
     triggers: ['what can you do', 'who are you', 'what are you', 'how can you help', 'help me'],
+    // "who are you" is a substring of "who are your parents". Personal
+    // questions about the assistant are not questions about the school.
+    guard: (q) => !hasAny(q, ['parent', 'mother', 'father', 'family', 'married', 'age$', 'human', 'real person']),
     answer: (content) => ({
       text: [
         `I'm an assistant for the ${content.settings.name} website. Everything I tell you comes from this site's own content, so it stays current when the school updates it.`,
@@ -327,10 +390,16 @@ const intents: Intent[] = [
     id: 'entrance-exam',
     priority: 79,
     // Exam codes are exact-word matches — see `hasAny` for why.
-    triggers: ['cat$', 'xat$', 'gmat$', 'gre$', 'mat$', 'entrance exam', 'entrance test', 'which exam', 'percentile', 'score required'],
-    answer: () => ({
+    triggers: ['cat$', 'xat$', 'gmat$', 'gre$', 'mat$', 'cmat$', 'nmat$', 'snap$', 'cet$', 'atma$', 'entrance exam', 'entrance test', 'which exam', 'percentile', 'score required'],
+    answer: (_content, query) => ({
       text: [
         'We accept **CAT, XAT, GMAT, GRE and MAT** scores obtained within the preceding twenty-four months, with no preference given to one over another. If you hold more than one valid score we consider the strongest.',
+        // Naming an exam we do not take is the single most common way to waste
+        // an applicant's round, so say it plainly rather than leaving them to
+        // infer it from a list.
+        ...(hasAny(query, ['cmat$', 'nmat$', 'snap$', 'cet$', 'atma$'])
+          ? ['That list is exhaustive — CMAT, NMAT, SNAP, state CETs and ATMA are **not** accepted. If you hold one of those, you would need a valid score from an accepted exam to apply.']
+          : []),
         'Percentile expectations vary by specialisation:',
         listOf([
           'Business Analytics & AI — 85th percentile or above in quantitative',
@@ -686,6 +755,290 @@ const intents: Intent[] = [
       ],
     }),
   },
+
+  // --- process detail ------------------------------------------------------
+  //
+  // Everything below answers a question a real applicant asks but the pages
+  // above only imply. Each answer is derived from `src/data/admissions.ts` or
+  // `src/data/campus.ts` rather than invented, so editing the data edits the
+  // reply. Where the site genuinely has no policy the answer says so and hands
+  // over to the admissions office instead of guessing.
+  {
+    id: 'refund',
+    priority: 83,
+    triggers: ['refund', 'withdraw', 'cancel my admission', 'cancel admission', 'money back', 'deposit back', 'leave the course'],
+    answer: () => ({
+      text: [
+        'Three different sums, three different rules:',
+        listOf([
+          'The **₹2,500 application fee** is non-refundable once the form is submitted.',
+          'The **₹25,000 security deposit** is fully refundable, returned after you graduate or withdraw, less any outstanding dues.',
+          '**Tuition** is refunded on a sliding scale that depends on how close to the start of term you withdraw, and on whether the seat can be reallocated.',
+        ]),
+        'The tuition scale follows the regulator’s norms rather than a school policy, so the admissions office will give you the exact figure for your withdrawal date in writing before you decide.',
+      ],
+      links: [{ label: 'Fee structure', to: '/admissions#fees' }, { label: 'Contact admissions', to: '/contact' }],
+      chips: ['Fee structure', 'Scholarships'],
+    }),
+  },
+  {
+    id: 'documents',
+    priority: 81,
+    triggers: ['document', 'marksheet', 'mark sheet', 'transcript', 'paperwork', 'what to bring', 'verification', 'certificate'],
+    answer: () => ({
+      text: [
+        'Nothing is needed to *start* an application — you can submit the form and add your entrance score later, up to the round deadline.',
+        'Document verification happens at enrolment, after you accept a seat. Bring the originals plus one photocopy of each:',
+        listOf([
+          'Degree certificate and mark sheets for every year of your bachelor’s',
+          'Class X and XII certificates',
+          'Entrance scorecard (CAT, XAT, GMAT, GRE or MAT)',
+          'Photo identity and address proof',
+          'Category certificate, if you are claiming a relaxed cut-off',
+          'Experience letters, if you have work experience to declare',
+          'Migration and transfer certificates from your previous institution',
+        ]),
+        'Final-year students may enrol against a provisional certificate, with proof of completion due before the end of the first term.',
+      ],
+      links: [{ label: 'Admission process', to: '/admissions' }],
+      chips: ['Eligibility', 'How do I apply?', 'When does the session start?'],
+    }),
+  },
+  {
+    id: 'selection-process',
+    priority: 76,
+    // `placement-support` sits at 77 and owns "interview prep" / "mock
+    // interview", so those reach the careers answer before this one. The guard
+    // is belt-and-braces in case that intent is ever reordered.
+    triggers: ['interview', 'written ability', 'selection process', 'shortlist', 'group discussion', 'how are candidates selected', 'wat'],
+    guard: (q) => !/(prepar|mock|resume|cv |career service)/.test(q),
+    answer: () => {
+      const shortlisting = admissionSteps.find((s) => s.step === 3)
+      const interview = admissionSteps.find((s) => s.step === 4)
+      return {
+        text: [
+          'Selection is two stages, both after the application closes.',
+          `**Shortlisting and written ability test.** ${shortlisting?.description ?? ''}`,
+          `**Personal interview.** ${interview?.description ?? ''}`,
+          'Offers follow within twenty-one days of the interview, with the scholarship decision attached.',
+        ],
+        links: [{ label: 'Admission process', to: '/admissions' }],
+        chips: ['Key dates', 'What documents do I need?', 'Scholarships'],
+      }
+    },
+  },
+  {
+    id: 'session-start',
+    priority: 79,
+    triggers: ['session start', 'classes start', 'class start', 'term start', 'term begin', 'academic calendar', 'joining date', 'bridge course', 'induction', 'when does the session', 'when do classes', 'kab se start', 'session kab', 'class kab'],
+    answer: () => {
+      const bridge = importantDates.find((d) => d.label.toLowerCase().includes('bridge'))
+      return {
+        text: [
+          bridge
+            ? `The pre-term bridge course begins on **${formatDate(bridge.date)}**, and the first term follows immediately after it.`
+            : 'The pre-term bridge course runs in June, with the first term following immediately after.',
+          'The bridge course is not optional padding — it levels up quantitative methods and accounting for candidates from non-commerce backgrounds, which is most of a typical cohort.',
+          'Enrolment and document verification are completed before it starts.',
+        ],
+        links: [{ label: 'Key dates', to: '/admissions#dates' }],
+        chips: ['Key dates', 'What documents do I need?', 'Hostel'],
+      }
+    },
+  },
+  {
+    id: 'reservation-quota',
+    priority: 81,
+    triggers: ['reservation', 'quota', 'management seat', 'management quota', 'donation', 'capitation', 'nri seat', 'paid seat'],
+    answer: () => ({
+      text: [
+        'There is **no management quota, donation seat or capitation fee** at Meridian. Every seat is filled on the published selection criteria, and no amount of money will buy one.',
+        'Statutory reservation is applied as required, and reserved-category candidates need a 45% aggregate rather than 50%.',
+        'If anybody offers you a seat here in exchange for a payment outside the fee structure, it is a fraud — please report it to the admissions office.',
+      ],
+      links: [{ label: 'Eligibility', to: '/admissions#eligibility' }, { label: 'Contact admissions', to: '/contact' }],
+      chips: ['Eligibility', 'Scholarships', 'How do I apply?'],
+    }),
+  },
+  {
+    id: 'waitlist',
+    priority: 80,
+    triggers: ['waitlist', 'waiting list', 'wait list', 'reserve list'],
+    answer: () => ({
+      text: [
+        'Yes. Each round publishes a ranked waitlist alongside its offers, and your position on it is visible to you — not just a "you are waitlisted" message.',
+        'Movement happens as admitted candidates decline, which is heaviest in the two weeks after each offer release. Waitlisted candidates are considered again in later rounds without reapplying or paying a second application fee.',
+      ],
+      links: [{ label: 'Key dates', to: '/admissions#dates' }],
+      chips: ['Key dates', 'How do I apply?'],
+    }),
+  },
+  {
+    id: 'executive-mba',
+    priority: 84,
+    triggers: ['executive mba', 'part time', 'part-time', 'weekend program', 'weekend class', 'distance learning', 'correspondence', 'online mba', 'evening class', 'work while study'],
+    answer: (content) => ({
+      text: [
+        `All ${content.programs.length} specialisations are **two-year, full-time, residential** programmes. There is no executive, part-time, weekend, evening, online or distance variant.`,
+        'That is a deliberate choice rather than a gap: the cohort model, the live projects and the summer internship all assume you are on campus full time.',
+        'If you need to keep working, the honest answer is that this is not the right programme for you right now.',
+      ],
+      links: [{ label: 'All programmes', to: '/programs' }],
+      chips: ['Which programmes do you offer?', 'Fees', 'Placement record'],
+    }),
+  },
+  {
+    id: 'internship',
+    priority: 79,
+    triggers: ['internship', 'intern', 'summer project', 'live project', 'summer placement'],
+    answer: () => ({
+      text: [
+        'Every student does a **summer internship between the first and second year**, typically eight to ten weeks, arranged through the Career Development Centre.',
+        'It is the single biggest driver of final placement — a large share of pre-placement offers come from the summer host, so the internship process is run with the same seriousness as final recruitment.',
+        'Live consulting projects with partner firms also run through the second year alongside coursework.',
+      ],
+      links: [{ label: 'Placements', to: '/placements' }],
+      chips: ['Placement record', 'Which companies recruit here', 'Career support'],
+    }),
+  },
+  {
+    id: 'teaching-method',
+    priority: 73,
+    // No bare "lecture" — it matches "recommend a lecture on quantum physics".
+    triggers: ['teaching method', 'pedagogy', 'case method', 'case study', 'how are classes', 'classes online', 'online or offline', 'mode of teaching', 'teaching style', 'guest lecture'],
+    answer: () => ({
+      text: [
+        'Teaching is **in person on campus** — the programme is residential and full time, not hybrid.',
+        'The core is the case method: you read the case beforehand, defend a position in class, and are graded partly on that contribution. It is supplemented by simulations on the trading floor, live consulting projects and a capstone in the final term.',
+        'Classes are small enough that there is nowhere to hide, which is the point.',
+      ],
+      links: [{ label: 'All programmes', to: '/programs' }, { label: 'Campus', to: '/campus' }],
+      chips: ['Class size', 'Campus facilities', 'Curriculum'],
+    }),
+  },
+  {
+    id: 'grading',
+    priority: 76,
+    // No bare "grade" — it matches "what grade of steel is strongest".
+    triggers: ['grading', 'cgpa', 'gpa$', 'exam pattern', 'evaluation', 'assessment', 'attendance', 'marking scheme'],
+    answer: () => ({
+      text: [
+        'Assessment is continuous rather than one final paper: class contribution, group work, mid-term and end-term examinations, and project submissions all count, in proportions published in each course outline at the start of the term.',
+        'Results are reported on a ten-point CGPA. Attendance is tracked per course, with a minimum threshold to be eligible for the end-term examination — an inevitable consequence of the case method, which does not work if half the room has not read the case.',
+      ],
+      links: [{ label: 'All programmes', to: '/programs' }],
+      chips: ['Teaching method', 'Curriculum', 'Class size'],
+    }),
+  },
+  {
+    id: 'sector-split',
+    priority: 79,
+    triggers: ['sector', 'which industry', 'industry hire', 'industries recruit', 'domain wise', 'sector wise'],
+    answer: () => ({
+      text: [
+        'The cohort spreads across these sectors at the final placement:',
+        listOf(
+          [...sectorSplit]
+            .sort((a, b) => b.pct - a.pct)
+            .map((s) => `**${s.sector}** — ${s.pct}%`),
+        ),
+        'The spread matters more than any single number: a school where four fifths of the batch goes into one sector is a school with one strong relationship, not a broad market.',
+      ],
+      links: [{ label: 'Placements', to: '/placements' }],
+      chips: ['Which companies recruit here', 'Average package', 'Career support'],
+    }),
+  },
+  {
+    id: 'getting-there',
+    priority: 79,
+    // No bare "transport" — it matches "how do i transport furniture".
+    triggers: ['how to reach', 'how do i reach', 'nearest metro', 'nearest railway', 'railway station', 'airport', 'bus service', 'shuttle', 'public transport', 'directions', 'how far is'],
+    answer: (content) => ({
+      text: [
+        `The campus is at **${content.settings.address}**.`,
+        listOf([
+          'Indira Gandhi International Airport is roughly 60 km by road.',
+          'The nearest metro is on the Aqua Line, with a campus shuttle meeting scheduled services.',
+          'Nearest major railheads are Hazrat Nizamuddin and New Delhi.',
+          'A shuttle runs between campus and the nearest metro station through the teaching day.',
+        ]),
+        'If you are travelling for an interview, tell the admissions office your arrival time and they will confirm the shuttle slot.',
+      ],
+      links: [{ label: 'Find us', to: '/contact' }, { label: 'Campus', to: '/campus' }],
+      chips: ['Can I visit the campus?', 'Contact admissions', 'Hostel'],
+    }),
+  },
+  {
+    id: 'campus-visit',
+    priority: 79,
+    // `parent` is deliberately a bare trigger: translated Hinglish scatters the
+    // words ("parents aa can hain"), so a two-word trigger never matches, and a
+    // question mentioning parents at all is asking about visiting.
+    triggers: ['can i visit', 'campus tour', 'open day', 'parent', 'family visit', 'see the campus', 'come and see'],
+    // "parent" alone matches "who are your parents" — require the question to
+    // be about coming here. `aa` covers the Hinglish "parents aa sakte hain",
+    // which translation scatters into non-adjacent words.
+    guard: (q) =>
+      hasAny(q, ['visit', 'campus', 'tour', 'open day', 'come', 'see$', 'family', 'aa$', 'aana', 'aayen', 'ghumne']),
+    answer: (content) => ({
+      text: [
+        'Yes — prospective students and their families are welcome, and it is genuinely worth doing before you commit two years and a fee like this one.',
+        `Tours run on working days during office hours (${content.settings.officeHours}) and are led by current students rather than the marketing team, which tends to produce more honest answers.`,
+        `Book ahead on **${content.settings.admissionsPhone}** or **${content.settings.admissionsEmail}** so somebody is expecting you.`,
+      ],
+      links: [{ label: 'Contact admissions', to: '/contact' }, { label: 'Campus', to: '/campus' }],
+      chips: ['How do I reach the campus?', 'Campus facilities', 'Hostel'],
+    }),
+  },
+  {
+    id: 'safety',
+    priority: 79,
+    triggers: ['safe', 'safety', 'security', 'ragging', 'harassment', 'women safety', 'girls safety'],
+    // "safe" on its own also matches "is bitcoin safe" — require something that
+    // places the question on this campus.
+    guard: (q) =>
+      hasAny(q, ['campus', 'hostel', 'college', 'school', 'girl', 'ladki', 'ladkiy', 'student', 'ragging', 'harass', 'women', 'residence', 'warden', 'night', 'here$']),
+    answer: () => ({
+      text: [
+        'The campus is gated and staffed around the clock, with controlled entry to the residential halls and lighting and CCTV across the shared areas.',
+        'Meridian operates a **zero-tolerance policy on ragging and harassment**, with an anti-ragging committee and an internal complaints committee that a student can approach directly, without going through a warden or faculty member first.',
+        'Residential halls have separate wings with their own access control, and a warden on call at every hour.',
+      ],
+      links: [{ label: 'Campus life', to: '/campus' }, { label: 'Contact', to: '/contact' }],
+      chips: ['Hostel', 'Campus facilities', 'Student clubs'],
+    }),
+  },
+  {
+    id: 'dress-code',
+    priority: 79,
+    triggers: ['dress code', 'uniform', 'what to wear', 'formal dress', 'formals'],
+    answer: () => ({
+      text: [
+        'There is no daily uniform. Everyday classes are smart casual.',
+        'Business formals are expected for interviews, guest lectures, industry visits, live-project client meetings and the placement season — and the Career Development Centre says so well before the first of those, so nobody is caught out.',
+      ],
+      links: [{ label: 'Campus life', to: '/campus' }],
+      chips: ['Campus facilities', 'Student clubs', 'Placement support'],
+    }),
+  },
+  {
+    id: 'brochure',
+    priority: 80,
+    // No bare "pdf" — it matches "give me a pdf of harry potter".
+    triggers: ['brochure', 'prospectus', 'information booklet', 'download the', 'send me details'],
+    answer: (content) => ({
+      text: [
+        'Everything a printed brochure would carry is on this site and kept current here first — programmes, curriculum, fees, scholarships, eligibility, placement figures, faculty and campus.',
+        `For a PDF pack or anything specific to your profile, email **${content.settings.admissionsEmail}** or call **${content.settings.admissionsPhone}** and the admissions office will send it across.`,
+      ],
+      links: [
+        { label: 'All programmes', to: '/programs' },
+        { label: 'Admissions', to: '/admissions' },
+        { label: 'Contact admissions', to: '/contact' },
+      ],
+      chips: ['Fees', 'Eligibility', 'Placement record'],
+    }),
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -828,6 +1181,10 @@ export function answerQuestion(content: ContentSnapshot, rawQuery: string): Chat
 }
 
 function resolve(content: ContentSnapshot, query: string): ChatAnswer {
+  // 0. Scope. Runs first: an intent that matches a question about another
+  //    organisation would otherwise answer it in our voice.
+  if (asksAboutSomewhereElse(query)) return decline(content)
+
   // 1. Rule-based intents, highest priority first.
   const ordered = [...intents].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
   for (const intent of ordered) {
@@ -851,7 +1208,12 @@ function resolve(content: ContentSnapshot, query: string): ChatAnswer {
     if (best && best.score >= threshold) return best.doc.answer()
   }
 
-  // 3. Scope guard — decline rather than invent.
+  // 3. Nothing matched — decline rather than invent.
+  return decline(content)
+}
+
+/** The one refusal, shared by the scope guard and the no-match path. */
+function decline(content: ContentSnapshot): ChatAnswer {
   return {
     unresolved: true,
     text: [

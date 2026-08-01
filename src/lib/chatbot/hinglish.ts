@@ -230,6 +230,83 @@ const RENDERERS: Record<string, Renderer> = {
     chips: ['Admission process', 'Scholarships', 'Campus facilities'],
   }),
 
+  documents: () => ({
+    text: [
+      'Application *shuru* karne ke liye kuch nahi chahiye — form abhi bhar sakte hain aur entrance score baad mein, round close hone tak add kar sakte hain.',
+      'Document verification enrolment ke waqt hota hai, seat accept karne ke baad. Original aur ek photocopy laayein:',
+      [
+        '• Degree certificate aur bachelor’s ke har saal ki marksheet',
+        '• Class X aur XII ke certificates',
+        '• Entrance scorecard (CAT / XAT / GMAT / GRE / MAT)',
+        '• Photo ID aur address proof',
+        '• Category certificate, agar relaxed cut-off claim kar rahe hain',
+        '• Experience letters, agar work experience declare karna hai',
+        '• Migration aur transfer certificate',
+      ].join('\n'),
+      'Final year ke students provisional certificate par enrol kar sakte hain — completion proof pehle term khatam hone se pehle dena hoga.',
+    ],
+    chips: ['Eligibility kya hai?', 'Admission kaise le?', 'Session kab start hoga?'],
+  }),
+
+  refund: () => ({
+    text: [
+      'Teen alag rakam, teen alag niyam:',
+      [
+        '• **₹2,500 application fee** — form submit karne ke baad wapas nahi hoti.',
+        '• **₹25,000 security deposit** — poori refundable hai, graduate ya withdraw karne par milti hai (bakaya kaat kar).',
+        '• **Tuition** — sliding scale par refund hoti hai, is baat par ki aap term shuru hone se kitna pehle chhod rahe hain aur seat dobara bhar paayi ja sakti hai ya nahi.',
+      ].join('\n'),
+      'Tuition ka scale regulator ke norms se aata hai, school ki apni policy se nahi — admissions office aapki exact date ke hisaab se figure likhit mein de dega.',
+    ],
+    chips: ['Fee structure', 'Scholarships'],
+  }),
+
+  'selection-process': () => ({
+    text: [
+      'Selection do stages mein hota hai, dono application close hone ke baad.',
+      '**1. Shortlisting aur written ability test** — har round close hone ke teen hafton ke andar shortlist aati hai. Zyadatar specialisations mein interview wale din ek written ability test hota hai.',
+      '**2. Personal interview** — Greater Noida campus par tees minute ka panel interview. India se bahar kaam kar rahe candidates ke liye kuch video slots bhi hain.',
+      'Interview ke ikkis din ke andar offer aata hai, scholarship decision ke saath.',
+    ],
+    chips: ['Last date kab hai?', 'Documents kya chahiye?', 'Scholarships'],
+  }),
+
+  'session-start': () => ({
+    text: [
+      'Pre-term bridge course June mein shuru hota hai, aur pehla term uske turant baad.',
+      'Bridge course sirf formality nahi hai — quantitative methods aur accounting ko us level tak le jaata hai jahan non-commerce background wale students comfortable ho jaayein, jo ek typical batch ka bada hissa hote hain.',
+      'Enrolment aur document verification usse pehle poore ho jaate hain.',
+    ],
+    chips: ['Important dates', 'Documents kya chahiye?', 'Hostel milega kya?'],
+  }),
+
+  internship: () => ({
+    text: [
+      'Haan — **pehle aur doosre saal ke beech summer internship** hoti hai, aam taur par aath se das hafte, Career Development Centre ke through.',
+      'Yehi final placement ka sabse bada factor hai: bahut saare pre-placement offers usi summer company se aate hain, isliye internship process bhi final recruitment jitni seriously chalti hai.',
+      'Doosre saal mein partner firms ke saath live consulting projects bhi chalte hain.',
+    ],
+    chips: ['Placement kaisa hai?', 'Kaunsi kampani aati hai?', 'Career support'],
+  }),
+
+  safety: () => ({
+    text: [
+      'Campus gated hai aur chaubees ghante staff rehta hai — residential halls mein controlled entry, aur saare common areas mein lighting aur CCTV.',
+      'Ragging aur harassment par **zero-tolerance policy** hai. Anti-ragging committee aur internal complaints committee dono hain, jinse student seedha sampark kar sakta hai — warden ya faculty ke through jaana zaroori nahi.',
+      'Residential halls ke alag wings hain apne access control ke saath, aur har waqt ek warden on call rehta hai.',
+    ],
+    chips: ['Hostel milega kya?', 'Campus kaisa hai?', 'Student clubs'],
+  }),
+
+  'campus-visit': (c) => ({
+    text: [
+      'Haan — prospective students aur unke parents dono welcome hain, aur do saal aur itni fees commit karne se pehle ek baar aa kar dekh lena sach mein sahi rehta hai.',
+      `Tours working days par office hours mein hote hain (${c.settings.officeHours}), aur current students karate hain — marketing team nahi, isliye jawab zyada seedhe milte hain.`,
+      `Pehle se book kar lein: **${c.settings.admissionsPhone}** ya **${c.settings.admissionsEmail}**.`,
+    ],
+    chips: ['Campus tak kaise pahunchein?', 'Campus kaisa hai?', 'Hostel milega kya?'],
+  }),
+
   'programs-list': (c) => ({
     text: [
       `Hum **${c.programs.length} MBA specialisations** offer karte hain — sab do-saal ke full-time programmes hain:`,
