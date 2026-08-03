@@ -1,11 +1,11 @@
 import type { Leader, Stat } from './types'
 
 export const aboutStory = {
-  heading: 'Founded to close a gap that had become embarrassing',
+  heading: 'A state university built to organise professional education in Bihar',
   paragraphs: [
-    'Meridian School of Business was established in 1994 by a group of eleven industrialists and academics who shared a specific frustration: the management graduates they were hiring could construct a strategy but had never carried one out. The founding charter committed the school to a curriculum in which every core course would be co-taught by someone who had done the job.',
-    'Three decades later that principle has survived contact with growth. Two-thirds of our core faculty held substantive industry positions before joining, and the industry immersion trimester — a full term embedded with a partner organisation, graded by the host rather than by us — remains compulsory for every student in every specialisation.',
-    'The school now enrols 480 students a year across eight specialisations on a 200-acre campus in Greater Noida, and counts 21,000 alumni in 46 countries. It has been accredited A++ by NAAC and ranked twelfth nationally by NIRF. We are, by design, not the largest business school in the country, and we have repeatedly declined to become one.',
+    'Aryabhatta Knowledge University was established by the Government of Bihar through the Aryabhatta Knowledge University Act, 2008 (Bihar Act 24 of 2008), and began functioning in March 2010. It is a collegiate state university with jurisdiction across the whole of Bihar, named after the mathematician and astronomer Aryabhatta.',
+    'The University was created to develop and manage professional and general higher education across the state — management, law, journalism, engineering and technology, medicine, public health, pharmacy, nursing and education among them — rather than to teach a single discipline on a single campus.',
+    'The Master of Business Administration is taught under the School of Management Teachings and governed by the University ordinances: four semesters across two academic years, 120 credits, twenty-four papers, and a summer training programme carried out with a host organisation. The ordinance on this site is the authoritative statement of those rules.',
   ],
 }
 
@@ -25,14 +25,14 @@ export const missionVision = [
 ]
 
 export const milestones = [
-  { year: '1994', event: 'Founded by eleven industrialists and academics; first cohort of 60 students.' },
-  { year: '2001', event: 'Greater Noida campus opens on 200 acres; residential halls admit the first 240 students.' },
-  { year: '2008', event: 'Industry immersion trimester made compulsory across all specialisations.' },
-  { year: '2014', event: 'Capital Markets Laboratory opens with 24 Bloomberg terminals.' },
-  { year: '2019', event: 'Student-managed fund launched with a real ₹2 crore long-only mandate.' },
-  { year: '2021', event: 'Business Analytics & AI specialisation introduced; first cohort of 40.' },
-  { year: '2024', event: 'Sustainability & ESG specialisation introduced; exchange network reaches eight schools.' },
-  { year: '2026', event: 'Re-accredited NAAC A++; placement rate reaches 98% with a ₹18.4 LPA median.' },
+  { year: '2008', event: 'Aryabhatta Knowledge University Act, 2008 (Bihar Act 24 of 2008) passed by the Bihar legislature.' },
+  { year: '2010', event: 'University begins functioning on 19 March 2010, with jurisdiction across the state of Bihar.' },
+  { year: '2011', event: 'Affiliation extended across engineering, management, medicine, pharmacy, nursing, education and law.' },
+  { year: '2013', event: 'School of Management Teachings constituted to run the MBA programme.' },
+  { year: '2015', event: 'MBA ordinances adopted: four semesters, 120 credits, 75% attendance, CIA and end-semester evaluation.' },
+  { year: '2017', event: 'Centres established for Geographical Studies, River Studies and Journalism & Mass Communication.' },
+  { year: '2019', event: 'Patliputra School of Economics added to the University’s teaching centres.' },
+  { year: '2021', event: 'Admissions and examination moved onto the University’s own online systems.' },
 ]
 
 export const leadership: Leader[] = [

@@ -10,7 +10,7 @@ import {
 import { placementStats, placementSupport, sectorSplit } from '@/data/placements'
 import { campusIntro, studentLife } from '@/data/campus'
 import { aboutStory, milestones } from '@/data/about'
-import { whyMeridian } from '@/data/site'
+import { whyAKU } from '@/data/site'
 import { bestNameMatch, hasAny, normalize, overlapScore, tokenize } from './text'
 import { isHinglish, localise, translateQuery } from './hinglish'
 import type { ChatAnswer, ChatLink } from './types'
@@ -85,7 +85,7 @@ const ELSEWHERE = [
 
 /** Words that tie a question back to this school. */
 const SELF_ANCHORS = [
-  'meridian', 'campus', 'college', 'school', 'universit', 'hostel', 'mba',
+  'aku', 'campus', 'college', 'school', 'universit', 'hostel', 'mba',
   'admission', 'placement', 'faculty', 'programme', 'program', 'course', 'class',
   'student', 'here$', 'your', 'you$', 'apka', 'aapka', 'apke', 'aapke', 'hamare', 'hamari',
 ]
@@ -693,7 +693,7 @@ const intents: Intent[] = [
         `${aboutStory.heading}.`,
         aboutStory.paragraphs[0],
         'What we would point to specifically:',
-        listOf(whyMeridian.map((w) => `**${w.title}** — ${w.body}`)),
+        listOf(whyAKU.map((w) => `**${w.title}** — ${w.body}`)),
         `Founded ${content.settings.established}. ${milestones.at(-1)?.event ?? ''}`,
       ],
       links: [{ label: 'About us', to: '/about' }],
@@ -852,7 +852,7 @@ const intents: Intent[] = [
     triggers: ['reservation', 'quota', 'management seat', 'management quota', 'donation', 'capitation', 'nri seat', 'paid seat'],
     answer: () => ({
       text: [
-        'There is **no management quota, donation seat or capitation fee** at Meridian. Every seat is filled on the published selection criteria, and no amount of money will buy one.',
+        'There is **no management quota, donation seat or capitation fee** at AKU. Every seat is filled on the published selection criteria, and no amount of money will buy one.',
         'Statutory reservation is applied as required, and reserved-category candidates need a 45% aggregate rather than 50%.',
         'If anybody offers you a seat here in exchange for a payment outside the fee structure, it is a fraud — please report it to the admissions office.',
       ],
@@ -1001,7 +1001,7 @@ const intents: Intent[] = [
     answer: () => ({
       text: [
         'The campus is gated and staffed around the clock, with controlled entry to the residential halls and lighting and CCTV across the shared areas.',
-        'Meridian operates a **zero-tolerance policy on ragging and harassment**, with an anti-ragging committee and an internal complaints committee that a student can approach directly, without going through a warden or faculty member first.',
+        'AKU operates a **zero-tolerance policy on ragging and harassment**, with an anti-ragging committee and an internal complaints committee that a student can approach directly, without going through a warden or faculty member first.',
         'Residential halls have separate wings with their own access control, and a warden on call at every hour.',
       ],
       links: [{ label: 'Campus life', to: '/campus' }, { label: 'Contact', to: '/contact' }],

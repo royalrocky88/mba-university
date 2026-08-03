@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Icon } from '@/components/ui/Icon'
 import { Marquee } from '@/components/ui/Marquee'
-import { heroStats, whyMeridian } from '@/data/site'
+import { heroStats, whyAKU } from '@/data/site'
 import { placementStats } from '@/data/placements'
 import { useContent, usePrograms } from '@/context/ContentProvider'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -71,17 +71,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Meridian */}
+      {/* Why AKU */}
       <section className="border-y border-ink-900/8 bg-ivory-dim py-20 lg:py-28">
         <div className="shell grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
           <SectionHeading
-            eyebrow="Why Meridian"
+            eyebrow="Why AKU"
             title="Four things we would put on the record"
             description="We are not the largest business school in the country, and we have repeatedly declined to become one. This is what the size buys."
           />
 
           <RevealGroup className="grid gap-5 sm:grid-cols-2">
-            {whyMeridian.map((item) => (
+            {whyAKU.map((item) => (
               <RevealItem key={item.title}>
                 <div className="h-full rounded-2xl border border-ink-900/10 bg-white/70 p-6">
                   <span className="grid size-11 place-items-center rounded-xl bg-ink-900 text-gold-300">

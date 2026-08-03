@@ -24,7 +24,7 @@ export const recruiters: Recruiter[] = [
   { name: 'Vertex Analytics', sector: 'Data & AI' },
   { name: 'Kestrel Retail Group', sector: 'Retail & FMCG' },
   { name: 'Solaris Energy', sector: 'Energy & Utilities' },
-  { name: 'Meridian Health Systems', sector: 'Healthcare' },
+  { name: 'Patna Health Systems', sector: 'Healthcare' },
   { name: 'BlueHarbour Logistics', sector: 'Supply Chain' },
   { name: 'Cobalt Software', sector: 'Enterprise SaaS' },
   { name: 'Ashwood & Partners', sector: 'Professional Services' },

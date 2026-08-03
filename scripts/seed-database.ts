@@ -16,6 +16,11 @@
  * row-level security, so a real session is required.
  *
  * Idempotent: a table that already holds rows is skipped, never overwritten.
+ *
+ * Pass `--replace` to delete and reload every collection instead. That is the
+ * right call after renaming the institution in `src/data/`, where the existing
+ * rows are stale seed content rather than anybody's edits — and the wrong call
+ * on a site somebody has been editing, because it discards their work.
  */
 
 import { readFileSync } from 'node:fs'
@@ -49,6 +54,9 @@ function fail(message: string): never {
   process.exit(1)
 }
 
+/** No row can carry this id, so it makes `neq` match everything. */
+const ZERO_UUID = '00000000-0000-0000-0000-000000000000'
+
 async function main(): Promise<void> {
   // fileURLToPath, not `.pathname` — the latter yields "/C:/…" on Windows.
   const fileEnv = readEnvFile(fileURLToPath(new URL('../.env.local', import.meta.url)))
@@ -74,6 +82,8 @@ async function main(): Promise<void> {
 
   let inserted = 0
   let skipped = 0
+  const replace = process.argv.includes('--replace')
+  if (replace) console.log('--replace: existing rows will be discarded\n')
 
   for (const key of collectionKeys) {
     const table = tableFor[key]
@@ -84,9 +94,15 @@ async function main(): Promise<void> {
     if (countError) fail(`Could not count ${table}: ${countError.message}`)
 
     if ((count ?? 0) > 0) {
-      console.log(`  skip   ${table.padEnd(16)} already has ${count} row(s)`)
-      skipped++
-      continue
+      if (!replace) {
+        console.log(`  skip   ${table.padEnd(16)} already has ${count} row(s)`)
+        skipped++
+        continue
+      }
+      // `neq` on a column that is never null is how PostgREST expresses
+      // "delete every row" — a bare delete() is rejected without a filter.
+      const { error } = await client.from(table).delete().neq('id', ZERO_UUID)
+      if (error) fail(`Clearing ${table} failed: ${error.message}`)
     }
 
     const rows = seedRows[key].map((item, index) => ({ data: item, sort_order: index }))

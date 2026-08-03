@@ -332,6 +332,17 @@ environment, and add an SPA rewrite:
   the media library and swap the `<span>` for an `<img>` in
   [`src/pages/Campus.tsx`](src/pages/Campus.tsx) — the aspect ratio is already
   reserved, so nothing will shift.
-- **Content is illustrative.** Meridian School of Business is fictional; every
-  name, figure and quotation is placeholder copy, meant to be replaced through
-  the admin panel.
+- **Aryabhatta Knowledge University is a real institution, and most of the
+  content on this site is not yet real.** The identity layer is accurate — the
+  name, the 2008 Act, the Mithapur address, the contact details, and the MBA
+  academic regulations, which come from the University's own ordinance. Almost
+  everything else is placeholder copy inherited from the template this site
+  started as: **faculty names and biographies, placement statistics, recruiter
+  names, fee amounts, scholarship schemes, campus facilities, news posts and
+  testimonials are all invented.**
+
+  That distinction matters more here than it would on a fictional site. A
+  placement rate or a fee table presented under a real state university's name
+  reads as a factual claim about that university, not as sample data. Replace
+  each of these through the admin panel with figures from the University before
+  this site is shown to anyone who might act on it.

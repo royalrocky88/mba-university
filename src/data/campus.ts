@@ -51,7 +51,7 @@ export const facilities: Facility[] = [
     stat: '5 outlets',
   },
   {
-    title: 'Meridian Ventures Incubator',
+    title: 'AKU Ventures Incubator',
     description:
       'Dedicated workspace for eight resident startup teams, a hardware prototyping bay and a pitch room wired for investor calls.',
     icon: 'incubator',
@@ -116,7 +116,7 @@ export const gallery: GalleryItem[] = [
   },
   {
     title: 'Incubator Bay',
-    caption: 'Meridian Ventures, late in the pitch cycle, in its usual state of controlled disorder.',
+    caption: 'AKU Ventures, late in the pitch cycle, in its usual state of controlled disorder.',
     tone: 'from-gold-500 via-gold-400 to-ink-400',
     span: 'normal',
   },

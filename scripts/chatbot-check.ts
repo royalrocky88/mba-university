@@ -46,7 +46,7 @@ const cases: { question: string; expect: string }[] = [
   { question: 'how many seats in total', expect: 'two-year, full-time' },
   { question: 'i am an international student, can i apply', expect: 'International and NRI' },
   { question: 'what do alumni say', expect: 'alumni across' },
-  { question: 'tell me about the school history', expect: 'gap that had become' },
+  { question: 'tell me about the school history', expect: 'Aryabhatta Knowledge University Act, 2008' },
 
   // Process detail — questions applicants ask that the pages only imply.
   { question: 'what documents do i need', expect: 'Document verification happens at enrolment' },

@@ -83,7 +83,7 @@ export function AdminLogin() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@meridian.edu.in"
+                placeholder="admin@akubihar.ac.in"
               />
             </div>
 

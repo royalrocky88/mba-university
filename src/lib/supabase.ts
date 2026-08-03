@@ -23,7 +23,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        storageKey: 'meridian-admin-auth',
+        storageKey: 'aku-admin-auth',
       },
     })
   : null

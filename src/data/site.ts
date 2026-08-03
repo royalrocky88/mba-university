@@ -5,23 +5,23 @@ import type { NavLink, Stat } from './types'
  * titles all read from here — rename the university in one place.
  */
 export const site = {
-  name: 'Meridian School of Business',
-  shortName: 'Meridian',
-  monogram: 'M',
-  parentUniversity: 'Meridian University',
-  tagline: 'Where ambition meets rigour.',
-  established: 1994,
+  name: 'Aryabhatta Knowledge University',
+  shortName: 'AKU',
+  monogram: 'A',
+  parentUniversity: 'Government of Bihar',
+  tagline: 'Master of Business Administration, Patna.',
+  established: 2008,
   description:
-    'An AICTE-approved, NAAC A++ accredited business school offering eight MBA specialisations, taught by a faculty drawn from industry and the world’s leading research universities.',
-  accreditations: ['NAAC A++', 'AICTE Approved', 'AACSB Member', 'NIRF Rank 12'],
+    'The MBA programme of Aryabhatta Knowledge University, Patna — a collegiate state university established by the Aryabhatta Knowledge University Act, 2008. A two-year, four-semester, 120-credit programme governed by the University ordinances.',
+  accreditations: ['State University', 'Bihar Act 24 of 2008', 'UGC Recognised', 'Functioning since 2010'],
   contact: {
-    address: 'Meridian Knowledge Park, Sector 62, Greater Noida, Uttar Pradesh 201310',
-    admissionsPhone: '+91 120 480 1200',
-    generalPhone: '+91 120 480 1100',
-    admissionsEmail: 'admissions@meridian.edu.in',
-    generalEmail: 'hello@meridian.edu.in',
-    officeHours: 'Monday – Saturday, 9:00 AM – 6:00 PM IST',
-    mapQuery: 'Greater Noida, Uttar Pradesh, India',
+    address: 'Gyan Parisar, Mithapur, Patna, Bihar 800001',
+    admissionsPhone: '+91 612 295 2741',
+    generalPhone: '+91 612 295 2752',
+    admissionsEmail: 'akuniv10@gmail.com',
+    generalEmail: 'akuniv10@gmail.com',
+    officeHours: 'Monday – Saturday, 10:00 AM – 5:00 PM IST',
+    mapQuery: 'Aryabhatta Knowledge University, Mithapur, Patna, Bihar',
   },
   socials: [
     { label: 'LinkedIn', href: 'https://linkedin.com' },
@@ -55,7 +55,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
   {
     heading: 'Institution',
     links: [
-      { label: 'About Meridian', to: '/about' },
+      { label: 'About AKU', to: '/about' },
       { label: 'Faculty', to: '/faculty' },
       { label: 'Campus Life', to: '/campus' },
       { label: 'News & Events', to: '/news' },
@@ -81,7 +81,7 @@ export const heroStats: Stat[] = [
 ]
 
 /** Differentiators surfaced on the home page. */
-export const whyMeridian = [
+export const whyAKU = [
   {
     title: 'Taught by practitioners',
     body: 'Two-thirds of our core faculty have led functions at Fortune 500 firms before returning to the classroom. Cases are drawn from deals they closed.',

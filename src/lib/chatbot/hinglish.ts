@@ -341,7 +341,7 @@ const RENDERERS: Record<string, Renderer> = {
     text: [
       'Chaar scholarship schemes hain, aur har offer letter ke saath uska scholarship decision bhi aata hai — matlab seat accept karne se pehle hi aapko pata hoga ki kitna kharcha aayega:',
       [
-        '• **Meridian Merit Award** — 100% tak tuition. Automatic consideration, alag application nahi.',
+        '• **AKU Merit Award** — 100% tak tuition. Automatic consideration, alag application nahi.',
         '• **Need-Based Grant** — 60% tak tuition, verified family income par.',
         '• **Women in Business Scholarship** — ₹4,00,000 per year, 24 awards.',
         '• **Armed Forces & Public Service Award** — ₹3,00,000 per year.',

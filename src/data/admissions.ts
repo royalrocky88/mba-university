@@ -77,7 +77,7 @@ export const feeStructure = {
 
 export const scholarships = [
   {
-    title: 'Meridian Merit Award',
+    title: 'AKU Merit Award',
     amount: 'Up to 100% of tuition',
     body: 'Awarded on entrance percentile and academic record. Considered automatically — there is no separate application. Round 1 applicants are assessed against the full pool.',
   },

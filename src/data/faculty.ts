@@ -13,7 +13,7 @@ export const faculty: Faculty[] = [
     bio: 'Ananya spent eleven years on the buy side — latterly as head of Indian equities for a global long-only fund — before returning to academia. Her research on retail order flow in emerging markets has been cited in RBI working papers, and she still chairs the investment committee that grades our student-managed fund.',
     experienceYears: 23,
     publications: 41,
-    email: 'a.raghavan@meridian.edu.in',
+    email: 'a.raghavan@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -27,7 +27,7 @@ export const faculty: Faculty[] = [
     bio: 'Vikram was CMO of a national FMCG business through its transition from mass distribution to direct-to-consumer. He teaches pricing as a negotiation between finance and psychology, and runs the consumer neuroscience lab where students test packaging against eye-tracking data.',
     experienceYears: 19,
     publications: 28,
-    email: 'v.shenoy@meridian.edu.in',
+    email: 'v.shenoy@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -41,7 +41,7 @@ export const faculty: Faculty[] = [
     bio: 'Meera built the ranking team at a large Indian e-commerce marketplace before moving into teaching. She insists every model her students build be paired with an experiment design, on the grounds that a lift you cannot attribute is a lift you cannot defend to a CFO.',
     experienceYears: 14,
     publications: 33,
-    email: 'm.krishnan@meridian.edu.in',
+    email: 'm.krishnan@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -55,7 +55,7 @@ export const faculty: Faculty[] = [
     bio: 'Rajat ran manufacturing operations across four plants for an auto-components major, including a turnaround that took one facility from loss to double-digit margin in seven quarters. He is a Lean Six Sigma Master Black Belt and leads our plant residency programme.',
     experienceYears: 26,
     publications: 22,
-    email: 'r.bose@meridian.edu.in',
+    email: 'r.bose@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -69,7 +69,7 @@ export const faculty: Faculty[] = [
     bio: 'Fatima has advised on restructures at three listed Indian companies and one central public sector undertaking. Her assessment-centre methodology is used by several of our recruiting partners, and she supervises the employment law clinic alongside practising counsel.',
     experienceYears: 21,
     publications: 37,
-    email: 'f.qureshi@meridian.edu.in',
+    email: 'f.qureshi@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -83,7 +83,7 @@ export const faculty: Faculty[] = [
     bio: 'Daniel was a partner at a global strategy consultancy, where he led the India market-entry practice for two decades. He convenes the international exchange term and supervises the market-entry dissertations that close the International Business programme.',
     experienceYears: 28,
     publications: 19,
-    email: 'd.mathew@meridian.edu.in',
+    email: 'd.mathew@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -97,7 +97,7 @@ export const faculty: Faculty[] = [
     bio: 'Priya has authored BRSR disclosures for two Nifty 50 constituents and advises a climate fund on portfolio-level emissions targets. She teaches carbon accounting as a control problem: measurable, auditable, and inconvenient to whoever owns the budget.',
     experienceYears: 12,
     publications: 26,
-    email: 'p.nandakumar@meridian.edu.in',
+    email: 'p.nandakumar@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -111,7 +111,7 @@ export const faculty: Faculty[] = [
     bio: 'Sanjay practised as a physician for nine years before moving into hospital administration, eventually serving as COO of a 900-bed tertiary care network. He co-ordinates the clinical rotations and the NABH accreditation readiness workshop.',
     experienceYears: 24,
     publications: 31,
-    email: 's.deshpande@meridian.edu.in',
+    email: 's.deshpande@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -125,7 +125,7 @@ export const faculty: Faculty[] = [
     bio: 'Nikhil spent twelve years as a rates and FX derivatives trader across Mumbai and Singapore. He runs the trading floor simulation and is unusually direct with students about how quickly a well-argued position can be wrong.',
     experienceYears: 17,
     publications: 11,
-    email: 'n.verma@meridian.edu.in',
+    email: 'n.verma@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -139,7 +139,7 @@ export const faculty: Faculty[] = [
     bio: 'Lakshmi bridges the two halves of the marketing department, teaching the analytics that let brand teams argue for budget. Her marketing-mix models are used by two of our partner brands to allocate real media spend each quarter.',
     experienceYears: 16,
     publications: 34,
-    email: 'l.iyer@meridian.edu.in',
+    email: 'l.iyer@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -153,7 +153,7 @@ export const faculty: Faculty[] = [
     bio: 'Arjun founded and exited two software businesses and now invests as an angel across early-stage Indian SaaS. He runs the campus incubator and is candid that most of the ideas that walk in should be killed sooner than their founders would like.',
     experienceYears: 18,
     publications: 6,
-    email: 'a.kapadia@meridian.edu.in',
+    email: 'a.kapadia@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
   {
@@ -167,7 +167,7 @@ export const faculty: Faculty[] = [
     bio: 'Kavita practised employment law before moving into academia and still appears occasionally before industrial tribunals. She teaches compensation design as an exercise in incentive archaeology — reading what a pay structure actually rewards, rather than what it claims to.',
     experienceYears: 15,
     publications: 24,
-    email: 'k.menon@meridian.edu.in',
+    email: 'k.menon@akubihar.ac.in',
     linkedin: 'https://linkedin.com',
   },
 ]
