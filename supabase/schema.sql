@@ -211,6 +211,122 @@ create policy "authenticated delete submissions"
   using (true);
 
 -- -----------------------------------------------------------------------------
+-- Administrator roles
+--
+-- Two levels:
+--   • superadmin — every section, plus site settings, theme, enquiries and the
+--     administrator list itself.
+--   • admin      — the content behind the navbar (programmes, faculty, news,
+--                  placements, campus, about) and nothing else.
+--
+-- The split is enforced here, in row-level security, not in React. Hiding a
+-- button only hides the button: an admin holding the anon key can still call
+-- PostgREST directly, so the database has to be the thing that says no.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text,
+  role text not null default 'admin' check (role in ('superadmin', 'admin')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+/*
+ * The caller's role, or null when signed out.
+ *
+ * SECURITY DEFINER so it can read `profiles` without recursing through that
+ * table's own policies — a policy that calls a function that reads the table
+ * the policy protects would deadlock into infinite recursion otherwise.
+ */
+create or replace function public.current_role_name()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.profiles where id = auth.uid()
+$$;
+
+create or replace function public.is_superadmin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(public.current_role_name() = 'superadmin', false)
+$$;
+
+/** True for either role — i.e. anybody who may edit navbar content. */
+create or replace function public.is_editor()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.current_role_name() in ('superadmin', 'admin')
+$$;
+
+-- Everyone signed in may read the administrator list (the admin UI shows it);
+-- only a superadmin may change it, and nobody may edit their own role.
+drop policy if exists "authenticated read profiles" on public.profiles;
+create policy "authenticated read profiles"
+  on public.profiles for select to authenticated using (true);
+
+drop policy if exists "superadmin write profiles" on public.profiles;
+create policy "superadmin write profiles"
+  on public.profiles for all
+  to authenticated
+  using (public.is_superadmin())
+  with check (public.is_superadmin());
+
+-- Content collections: either role may write.
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'programs', 'faculty', 'news', 'testimonials', 'recruiters',
+    'placement_trend', 'facilities', 'gallery', 'faqs', 'leadership'
+  ]
+  loop
+    execute format('drop policy if exists "authenticated write %s" on public.%I', t, t);
+    execute format(
+      'create policy "editor write %s" on public.%I for all
+         to authenticated using (public.is_editor()) with check (public.is_editor())', t, t
+    );
+  end loop;
+end $$;
+
+-- Site settings are superadmin-only: they carry the institution's name, address
+-- and contact details, which is not navbar content.
+drop policy if exists "authenticated write site_settings" on public.site_settings;
+drop policy if exists "superadmin write site_settings" on public.site_settings;
+create policy "superadmin write site_settings"
+  on public.site_settings for all
+  to authenticated
+  using (public.is_superadmin())
+  with check (public.is_superadmin());
+
+-- Enquiries and applications hold applicant contact details. Superadmin only.
+drop policy if exists "authenticated read submissions" on public.submissions;
+create policy "superadmin read submissions"
+  on public.submissions for select to authenticated using (public.is_superadmin());
+
+drop policy if exists "authenticated update submissions" on public.submissions;
+create policy "superadmin update submissions"
+  on public.submissions for update
+  to authenticated using (public.is_superadmin()) with check (public.is_superadmin());
+
+drop policy if exists "authenticated delete submissions" on public.submissions;
+create policy "superadmin delete submissions"
+  on public.submissions for delete to authenticated using (public.is_superadmin());
+
+-- -----------------------------------------------------------------------------
 -- Storage bucket for admin-uploaded images
 -- -----------------------------------------------------------------------------
 

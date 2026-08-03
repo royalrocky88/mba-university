@@ -9,7 +9,7 @@ import { Icon, type IconName } from '@/components/ui/Icon'
 
 /** Sidebar chrome for every admin screen. Deliberately plain — this is a tool. */
 export function AdminLayout() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, role, isSuperadmin } = useAuth()
   const { content, live, refresh, loading } = useContent()
   const newSubmissions = useNewSubmissionCount()
   const navigate = useNavigate()
@@ -54,13 +54,20 @@ export function AdminLayout() {
 
         <nav className="flex-1 p-3" aria-label="Admin sections">
           <AdminNavLink to="/admin" end icon="chart" label="Dashboard" />
-          <AdminNavLink
-            to="/admin/submissions"
-            icon="mail"
-            label="Enquiries"
-            badge={newSubmissions}
-          />
-          <AdminNavLink to="/admin/settings" icon="cpu" label="Site settings" />
+          {/* Enquiries hold applicant contact details, and settings carry the
+              institution's identity — both are superadmin-only, in the database
+              as well as here. */}
+          {isSuperadmin && (
+            <>
+              <AdminNavLink
+                to="/admin/submissions"
+                icon="mail"
+                label="Enquiries"
+                badge={newSubmissions}
+              />
+              <AdminNavLink to="/admin/settings" icon="cpu" label="Site settings" />
+            </>
+          )}
           <AdminNavLink to="/admin/media" icon="download" label="Media library" />
 
           <p className="mt-5 px-3 pb-2 text-[0.65rem] font-semibold tracking-[0.14em] text-ivory/35 uppercase">
@@ -89,9 +96,16 @@ export function AdminLayout() {
           </div>
 
           {user && (
-            <p className="truncate px-3 pb-2 text-[0.7rem] text-ivory/40" title={user.email}>
-              {user.email}
-            </p>
+            <div className="px-3 pb-2">
+              <p className="truncate text-[0.7rem] text-ivory/40" title={user.email}>
+                {user.email}
+              </p>
+              {role && (
+                <p className="mt-1 text-[0.66rem] text-ivory/35">
+                  {isSuperadmin ? 'Superadmin — full access' : 'Admin — navbar content only'}
+                </p>
+              )}
+            </div>
           )}
 
           <div className="flex gap-2">

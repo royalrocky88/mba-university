@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { collectionKeys, labelFor, seedDatabase } from '@/lib/repository'
 import { useContent } from '@/context/ContentProvider'
+import { useAuth } from '@/context/AuthProvider'
 import { useNewSubmissionCount } from '@/hooks/useSubmissions'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
@@ -10,6 +11,7 @@ import { formatDateShort } from '@/lib/utils'
 
 export function AdminDashboard() {
   const { content, live, refresh } = useContent()
+  const { isSuperadmin } = useAuth()
   const newSubmissions = useNewSubmissionCount()
   const [seeding, setSeeding] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -79,7 +81,7 @@ export function AdminDashboard() {
         </div>
       )}
 
-      {newSubmissions > 0 && (
+      {isSuperadmin && newSubmissions > 0 && (
         <Link
           to="/admin/submissions"
           className="group mb-6 flex items-center gap-4 rounded-2xl border border-gold-500/40 bg-gold-500/8 px-5 py-4 transition-colors hover:border-gold-500/70"
@@ -132,10 +134,12 @@ export function AdminDashboard() {
         <div className="rounded-2xl border border-ink-900/10 bg-white/70 p-6">
           <h2 className="font-display text-lg text-ink-900">Quick actions</h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button to="/admin/submissions" size="sm" variant="primary" icon="arrow-right">
-              View enquiries
-            </Button>
-            <Button to="/admin/news/new" size="sm" variant="outline">
+            {isSuperadmin && (
+              <Button to="/admin/submissions" size="sm" variant="primary" icon="arrow-right">
+                View enquiries
+              </Button>
+            )}
+            <Button to="/admin/news/new" size="sm" variant={isSuperadmin ? 'outline' : 'primary'}>
               Post an update
             </Button>
             <Button to="/admin/programs/new" size="sm" variant="outline">
@@ -147,9 +151,11 @@ export function AdminDashboard() {
             <Button to="/admin/media" size="sm" variant="outline">
               Upload images
             </Button>
-            <Button to="/admin/settings" size="sm" variant="ghost">
-              Site settings
-            </Button>
+            {isSuperadmin && (
+              <Button to="/admin/settings" size="sm" variant="ghost">
+                Site settings
+              </Button>
+            )}
           </div>
         </div>
 

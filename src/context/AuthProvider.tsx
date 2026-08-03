@@ -18,9 +18,26 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase'
  * can sign up would be able to edit the university's content.
  */
 
+/**
+ * What a signed-in administrator is allowed to do.
+ *
+ * `superadmin` reaches every section including site settings, the theme and
+ * applicant enquiries; `admin` reaches the content behind the navbar and
+ * nothing else.
+ *
+ * This drives what the UI *shows*. It is not what makes the split safe — the
+ * row-level security policies in `supabase/schema.sql` are, and `npm run
+ * check:rls` proves it by calling PostgREST directly as each role. Treat this
+ * value as a convenience, never as a guarantee.
+ */
+export type AdminRole = 'superadmin' | 'admin'
+
 type AuthState = {
   user: User | null
   session: Session | null
+  role: AdminRole | null
+  /** True for a superadmin. Sections beyond navbar content check this. */
+  isSuperadmin: boolean
   loading: boolean
   configured: boolean
   signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
@@ -52,6 +69,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  // Role travels in its own table rather than in the JWT, so it is fetched when
+  // the session changes. A failed read leaves the role null, which shows the
+  // smaller menu — failing closed is the right direction for a permission.
+  const [role, setRole] = useState<AdminRole | null>(null)
+  const userId = session?.user?.id ?? null
+
+  useEffect(() => {
+    if (!supabase || !userId) {
+      setRole(null)
+      return
+    }
+
+    let active = true
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setRole((data?.role as AdminRole | undefined) ?? null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [userId])
+
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) {
       return { ok: false, error: 'Supabase is not configured. See README.md for setup.' }
@@ -81,13 +125,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user: session?.user ?? null,
       session,
+      role,
+      isSuperadmin: role === 'superadmin',
       loading,
       configured: isSupabaseConfigured,
       signIn,
       signOut,
       sendPasswordReset,
     }),
-    [session, loading, signIn, signOut, sendPasswordReset],
+    [session, role, loading, signIn, signOut, sendPasswordReset],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

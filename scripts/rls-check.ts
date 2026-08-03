@@ -179,6 +179,91 @@ async function main(): Promise<void> {
     check('a duplicate reference is rejected', error !== null, 'insert succeeded')
   }
 
+  // -------------------------------------------------------------------------
+  // Roles
+  //
+  // The admin/superadmin split is the one place where hiding a button in React
+  // would look identical to enforcing it. These assertions sign in as a real
+  // content admin and call PostgREST directly, which is exactly what somebody
+  // bypassing the UI would do.
+  // -------------------------------------------------------------------------
+
+  const editorEmail = process.env.SUPABASE_EDITOR_EMAIL
+  const editorPassword = process.env.SUPABASE_EDITOR_PASSWORD
+
+  if (!editorEmail || !editorPassword) {
+    console.log('\nroles — skipped (set SUPABASE_EDITOR_EMAIL / SUPABASE_EDITOR_PASSWORD)\n')
+  } else {
+    console.log('\nroles — a content admin may edit the navbar, and nothing else\n')
+
+    const editor: SupabaseClient = createClient(url, anonKey, opts)
+    const { error: editorAuthError } = await editor.auth.signInWithPassword({
+      email: editorEmail,
+      password: editorPassword,
+    })
+    check('content admin can sign in', editorAuthError === null, editorAuthError?.message)
+
+    {
+      const { data, error } = await editor
+        .from('news')
+        .insert({ data: { title: 'RLS probe', slug: 'rls-probe-post' }, sort_order: 998 })
+        .select('id')
+        .maybeSingle()
+      check('content admin CAN create a news post', !error && Boolean(data?.id), error?.message)
+      if (data?.id) await editor.from('news').delete().eq('id', data.id)
+    }
+
+    {
+      const { error } = await editor
+        .from('site_settings')
+        .update({ data: { name: 'HIJACKED' } })
+        .eq('id', 1)
+      const { data } = await anon.from('site_settings').select('data').eq('id', 1).maybeSingle()
+      const name = (data?.data as { name?: string } | undefined)?.name
+      check(
+        'content admin CANNOT rename the institution',
+        name !== 'HIJACKED',
+        error?.message ?? 'site settings were overwritten',
+      )
+    }
+
+    {
+      const { data, error } = await editor.from('submissions').select('id')
+      check(
+        'content admin CANNOT read applicant enquiries',
+        !error && (data?.length ?? 0) === 0,
+        error ? error.message : `leaked ${data?.length} row(s)`,
+      )
+    }
+
+    {
+      const { data: before } = await admin
+        .from('profiles')
+        .select('role')
+        .eq('email', editorEmail)
+        .maybeSingle()
+      await editor.from('profiles').update({ role: 'superadmin' }).eq('email', editorEmail)
+      const { data: after } = await admin
+        .from('profiles')
+        .select('role')
+        .eq('email', editorEmail)
+        .maybeSingle()
+      check(
+        'content admin CANNOT promote themselves',
+        after?.role === before?.role && after?.role === 'admin',
+        `role is now ${after?.role}`,
+      )
+    }
+
+    {
+      const { data, error } = await admin.from('submissions').select('id').limit(1)
+      check('superadmin CAN still read enquiries', !error, error?.message)
+      void data
+    }
+
+    await editor.auth.signOut()
+  }
+
   console.log('\ncleanup\n')
 
   if (createdId) {

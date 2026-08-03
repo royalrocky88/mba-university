@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from '@/context/AuthProvider'
 import { AdminLayout } from './AdminLayout'
 import { AdminLogin } from './Login'
@@ -18,7 +18,7 @@ import { AdminSubmissions } from './Submissions'
  * anyone without a valid session regardless of what the browser renders.
  */
 export default function AdminRoutes() {
-  const { user, loading, configured } = useAuth()
+  const { user, loading, configured, isSuperadmin } = useAuth()
 
   if (loading) {
     return (
@@ -40,10 +40,20 @@ export default function AdminRoutes() {
     <Routes>
       <Route element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
-        <Route path="settings" element={<AdminSettings />} />
+        {/* Hiding the nav link is not enough — a content admin can still type
+            the URL. Redirect rather than render; the database would reject the
+            writes anyway, but an empty settings form is a confusing way to
+            learn that. */}
+        <Route
+          path="settings"
+          element={isSuperadmin ? <AdminSettings /> : <Navigate to="/admin" replace />}
+        />
         <Route path="media" element={<MediaLibrary />} />
         {/* Static segment, so it out-ranks the `:collection` pattern below. */}
-        <Route path="submissions" element={<AdminSubmissions />} />
+        <Route
+          path="submissions"
+          element={isSuperadmin ? <AdminSubmissions /> : <Navigate to="/admin" replace />}
+        />
         <Route path=":collection" element={<CollectionList />} />
         <Route path=":collection/:id" element={<CollectionEditor />} />
         <Route path="*" element={<AdminDashboard />} />
